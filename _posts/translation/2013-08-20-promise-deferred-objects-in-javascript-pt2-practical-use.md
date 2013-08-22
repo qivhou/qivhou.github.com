@@ -237,7 +237,7 @@ def.then(function() {
 
 ```
 
-## Gotcha's： 理解jQuery中的`.then()`
+## Gotcha's： 理解jQuery中的.then()
 
 为了证明一些"Gotcha's"，最后这部分，我用到了一些我第一次接触`promises`时的例子。
 
@@ -410,9 +410,9 @@ aManualDeferred.resolve();
 ```
 这个版本读起来相当不错，但是却有只用一个命名`promise`的缺点，它并不能让我们真正对过程中的每一个步骤进行细粒度的控制，而这正是很多情况下需要的。
 
-### 松开`promises`和他们的处理程序
+### 松绑promises和他们的处理程序
 
-假设我们想要避免深层嵌套函数并且我应该命名我们的`promises`来使我们访问过程中的每一个步骤，这里有一个最终版本
+假设我们想要避免深层嵌套函数，而且我们应该命名`promises`来使我们能够访问过程中的每一个步骤，那么这里的最终版本就是我们需要的。
 
 ```javascript
 var aManualDeferred, secondManualDeferred, thirdManualDeferred;
