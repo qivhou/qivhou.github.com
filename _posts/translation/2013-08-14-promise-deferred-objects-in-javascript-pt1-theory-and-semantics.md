@@ -10,16 +10,16 @@ tags : [翻译, jQuery, Deferred, Promise, javascript]
 
 ## 介绍
 
-在过去一段并不长的时间里，对于Javascript的程序员来说，处理异步事件的主要的工具是(callback)回调。
+在过去一段并不算长的时间里，对于Javascript的程序员来说，处理异步事件的主要的工具是(callback)回调。
 
 >(callback) 回调是一段可执行的代码，被当做一个参数传递给其他代码，它预期会被在合适的时候回调(执行)。 
 ——[Wikipedia](https://en.wikipedia.org/wiki/Callback_computer_programming)
 
 换句话来说，一个函数可以被当做参数传递给另一个函数并且在被调用时执行。
 
-(callbacks) 回调本身没有错，但是依赖于我们具体的编程环境，我们在管理异步事件上有一些其他可用的选择。在这篇文章中我的目标是考察一个可用工具集合：`promise`对象和`deferred`对象。在第一部分，我们将涵盖理论和语义，在第二部分我们将看看如何使用。
+(callbacks) 回调本质上并没有问题，但是依赖于我们编程的具体环境，对于管理异步事件来说，还有一些其他不错的选择。在这篇文章中，我的目标是考察一个可用工具集：`promise`对象和`deferred`对象。在第一部分，我们将涵盖理论和语义，在第二部分我们将看看如何使用它。
 
-在Javascript中如何有效处理异步事件的关键点之一是理解程序会继续执行即使它没有得到为了进行中工作所需要的值。处理*从还没有完成的任务中获取未知值*使得javascript中的异步事件处理极具挑战，特别是当你第一次接触它的时候。
+在Javascript中如何有效处理异步事件的关键点之一是：理解程序会继续执行，即使它还没有得到进行中的工作所需要的值。处理*从还没有完成的任务中获取未知值*使得javascript中的异步事件处理极具挑战，特别是当你第一次接触它的时候。
 
 这种情形的一个经典的例子是`XMLHttpRequest (Ajax)`. 想象一下我们要：
 
@@ -29,7 +29,7 @@ tags : [翻译, jQuery, Deferred, Promise, javascript]
 
 *  然后做其他事情
 
-在我们的程序中我们初始化我们的`Ajax`请求。这个请求被发起但是不同于同步事件，我们程序的执行在服务器响应的时候不会停止而是继续运行。到我们从`Ajax`请求得到响应数据的时候，这个程序已经执行完毕。
+在我们的程序中我们初始化我们的`Ajax`请求，这个请求被发起但是不同于同步事件，我们程序在服务器响应的时候不会停止而是继续运行，到我们从`Ajax`请求得到响应数据的时候，这个程序才执行完毕。
 
 ## Promises 和 Deferreds : 它们是什么？
 
@@ -39,11 +39,14 @@ tags : [翻译, jQuery, Deferred, Promise, javascript]
 
 * 一个`deferred`代表一个还没有完成的任务
 
-从更高一点的层次来考虑，JavaScript中的`promises`给了我们在并行方式下给同步代码编写异步代码的能力。在我们具体了解前，让我们用一个图解来得到一个大体的概览。
+从更高一点的层次来考虑，JavaScript中的`promises`给了我们在并行方式下给同步代码编写异步代码的能力。在我们具体了解前，让我们用一个图解来得到一个大体的概念。
 
 ![Promises](http://www.mediumequalsmessage.com/blog-images/promises.png)
 
 `promise`是一个最初未知结果的占位符，而`deferred`代表由这个值导致的计算。每一个`deferred`有一个`promise`，`promise`作为一个未来结果的代理。当一个`promise`是一个由异步函数返回的值时，`deferred`可以被它的 (caller) 调用者 (resolve) 解决或者 (reject) 拒绝，(caller) 调用者从 (resolver) 解决者分离出这个`promise`。`promise`自己可以被传给任意数量的 (consumer) 消费者，并且每一个消费者将独立观察结果，同时`resolver`/`deferred`可以被传给任意数量的 (producer) 生产者，并且`promise`将被其中第一个 (resolve) 解决它的生产者解决。从语义的角度上来看，它意味着我们可以不调用一个函数((`callback`) 回调 )就返回一个值(`promise`)。
+
+> 注： 这段话翻译的极其崩溃，大家还是看E文比较能得到它的原意。
+
 
 ## Promises 根据 Promise/A 提案
 
@@ -57,9 +60,11 @@ tags : [翻译, jQuery, Deferred, Promise, javascript]
 * 有一个函数作为"then"属性的值，(必须返回一个`promise`对象)。
 
 * 添加`fulfilledHandler`(完成时处理程序),`errorHandler`(错误时处理程序)和`progressHandler`(进行中处理程序)，它们将在`promise`(completion)完成时被调用。
+
 ```javascript
     then(fulfilledHandler, errorHandler, progressHandler)
 ```
+
 * 从回调处理程序返回的值是返回的`promise`对象的完成值。
 
 * `promise`对象的值必须不能被改变(避免由监听者的意外行为产生的副作用)

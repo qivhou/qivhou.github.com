@@ -13,10 +13,10 @@ tags : [翻译, jQuery, Deferred, Promise, javascript]
 
 在[这篇博文的第一部分](http://blog.mediumequalsmessage.com/promise-deferred-objects-in-javascript-pt1-theory-and-semantics)，我花了很多时间查看`promises`和`deferreds`的理论知识：`promises`是什么和他们的行为方式是怎样的。现在是时候让我们实际的去深入并探索一些在`javascript`中使用`promises`和`deferreds`的方法和最佳实践。我将从一些基本的使用和`promises`的例子开始，然后深入到一些关于在`jQuery`中使用`promises`的具体的例子。
 
->注意：尽管`jQuery`与`Promise/A`提案在错误处理和与其他`promise`库一起工作的情况下，有一些显著的差异，但是代码示例将使用`jQuery`。因为第一部分在这个话题上已经讨论过并且包含了一些有深度的文章的链接，我将不会在这篇文章中再去谈它。`jQuery`的使用仍然在广泛传播着，而且对许多人来说它的实现是一个对`promises`使用的介绍，这两点让我相信对`promises`在`jQuery`中的工作有一个理解是很有意义的。
+>注意：尽管`jQuery`与`Promise/A`提案在错误处理和与其他`promise`库一起工作的情况下，有一些显著的差异，但是代码示例将使用`jQuery`。因为第一部分在这个话题上已经讨论过并且包含了一些有深度的文章的链接，我将不会在这篇文章中再去谈它。`jQuery`的使用仍然在广泛传播着，而且对许多人来说它的实现是一个对`promises`使用的介绍，这两点让我相信理解jQuery中的`promises`是如何工作的是很有意义的。
 
 ## 序列模式
-`deferred`是一个代表还未完成任务的对象，`promise`是一个代表未知值的对象。换句话说，`promises/deferreds`允许我们代表`简单`的任务，并且可以被容易的组合起来代表复杂的任务和它们的流，允许细粒度的控制序列。这意味着我们能编写异步的`Javascript`平行于我们如何写同步代码。另外，`promises`使得在多个异步任务中提取小的功能代码片段变得相对简单————例如加载动画，进度动画等例子。
+`deferred`是一个代表还未完成任务的对象，`promise`是一个代表未知值的对象。换句话说，`promises/deferreds`允许我们代表*简单*的任务，并可以很容易的组合起来代表复杂的任务和它们的工作流，而且可以允许对序列进行细粒度的控制。这意味着我们能并行的编写异步的`Javascript`和同步代码。另外，`promises`使得在多个异步任务中提取小的功能代码片段变得相对简单————例如加载动画，进度动画等例子。
 
 让我们从一个3个普通序列模式的全局视图开始，`promises`使得堆栈模式，并行模式和顺序模式成为可能。
 
@@ -76,11 +76,11 @@ tags : [翻译, jQuery, Deferred, Promise, javascript]
 这些模式可以被组合或者独立使用来构建复杂的任务或者工作流。
 
 ## 常见用例
-许多`promise`用例的例子是关于`Ajax`请求和UI动画的。事实上，`jQuery`甚至从`Ajax`请求默认返回`promises`。这对于那些完成时需要被以独特方式处理的异步任务来说是理想的方式。然而，他并不意味着`promises`的使用应该限制在这些用例中。事实上，`promises`往往是在你需要调用回调函数时，值得考虑的一个工具，这么说，让我们看看我们可以使用`promises`的一些方式。
+许多`promise`用例的例子是关于`Ajax`请求和UI动画的。事实上，`jQuery`甚至从`Ajax`请求默认返回`promises`。这对于那些完成时需要被以独特方式处理的异步任务来说是最理想的方式。然而，这并不意味着`promises`的使用应该限制在这些用例中。事实上，`promises`往往是在你需要调用回调函数时，值得考虑的一个工具，让我们看看我们可以使用`promises`的一些方式。
 
 * Ajax
 
-在`Ajax`请求中使用`promises`的例子可以在这篇博文中被找到，所以我将在这儿跳过这个例子。
+在`Ajax`请求中使用`promises`的例子可以在这篇文章中被找到，所以我将在这儿跳过这个例子。
 
 * 定时
 
@@ -103,7 +103,7 @@ tags : [翻译, jQuery, Deferred, Promise, javascript]
 ```
 * 动画
 
-很显然下面的动画师完全没有用的，但是它作为一个例子告诉我们`promises`和动画是如何被一块使用的。
+很显然下面的动画是完全没有用的，但是作为一个例子它告诉我们`promises`和动画是如何被一块使用的。
 
 ```javascript
     var fadeIn = function (el) {
@@ -237,10 +237,11 @@ def.then(function() {
 
 ```
 
-## 疑难杂症： 理解jQuery中的`.then()`
+## Gotcha's： 理解jQuery中的`.then()`
 
-为了证明一些疑难杂症，这些最后的例子将涉及到我在学习过程中第一次接触`promises`的部分。
-让我们为下面的例子假定两个实用函数：
+为了证明一些"Gotcha's"，最后这部分，我用到了一些我第一次接触`promises`时的例子。
+
+让我们为下面的例子假定两个工具函数：
 
 ```javascript
 // Utility Functions
@@ -254,7 +255,7 @@ function notifyOfProgress(message, promise) {
 }
 ```
 
-第一次，我尝试把`promises`链在一起，看起来像下面这样：
+首先，我尝试把`promises`链在一起，看起来像下面这样：
 
 ```javascript
 // Naive attempt at working with .then()
@@ -282,7 +283,7 @@ secondManualDeferred.then(function () {
 aManualDeferred.resolve();
 ```
 
-执行上面的代码，控制台输出是我在不使用`promises`时所期待的。
+执行上面的代码，控制台输出是我没有使用`promises`时所期待的结果。
 
 ```
 1 started
@@ -291,7 +292,7 @@ aManualDeferred.resolve();
 1 ended
 ```
 
-`jQuery`的API中描述`.then()`是可以链式操作并且返回一个新的`promise`,所以我的期望是不管我把什么封装在`.then()`中，把什么链在一起，它都将会按顺序发生并且在开始下一个任务时需要等待之前的任务完成。显然这并不是刚才发生的，为什么呢？
+`jQuery`的API中描述`.then()`是可以链式操作并且返回一个新的`promise`,所以我的期望是不管我把什么封装在`.then()`中，把什么链在一起，它都将会按顺序发生，并且必须等待之前的任务完成才可以开始下一个任务。显然这并不是刚才发生的，为什么呢？
 
 ##`.then()`究竟是怎么工作的？
 我们从`jQuery`的源码中发现：
@@ -373,7 +374,7 @@ aManualDeferred.then(function () {
 aManualDeferred.resolve();
 
 ```
-这次成功了。不幸的是，它重新回到了回调地狱模式，但这正是`promises`应该帮助我们避免的事之一。幸运的是，有一些方法使我们不用深层嵌套函数就可以解决这个问题。当然，我们选择用怎样的方式去解决它视我们的具体情况而定
+这次成功了。不幸的是，它重新回到了回调地狱模式，但这正是`promises`应该帮助我们避免的事之一。幸运的是，有一些方法使我们不用深层嵌套函数就可以解决这个问题。当然，我们选择用怎样的方式去解决它视我们的具体情况而定。
 
 ### 避免广泛使用匿名的`promises`
 
