@@ -1,0 +1,202 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script type="text/javascript" src="js/phaser.min.js"></script>
+  <style type="text/css">
+    body {
+        margin:0;
+    }
+    #flappy-bird {
+        margin: 0 auto;
+        width : 640px;
+        height : 840px;
+    }
+  </style>
+  <title>Flappy Bird</title>
+</head>
+<body>
+    <div id="flappy-bird">
+    
+    </div>
+    <script type="text/javascript">
+        var game = new Phaser.Game(600, 800, Phaser.AUTO, 'flappy-bird', {preload: preload, create: create, update: update });
+
+        function preload(){
+            game.load.image('background', 'assets/background.png');
+            game.load.image('ground', 'assets/ground.jpg');
+            game.load.image('pipe', 'assets/pipe.png');
+            game.load.image('gameover', 'assets/gameover.png');
+            game.load.image('again', 'assets/playagain.png');
+            game.load.spritesheet('bird', 'assets/bird.png', 92, 64);
+            game.load.bitmapFont('desyrel', 'assets/fonts/desyrel.png', 'assets/fonts/desyrel.xml');
+        }
+
+        var score = 0 , pass = false;
+
+        var bird, scoreboard, spacebar, ground, upPipe, downPipe, over, again;
+
+        function create(){
+            //background
+            game.add.sprite(0, -200, 'background');
+            
+            //up & down pipes
+            generatePipes();
+            
+            // init the bird
+            bird = game.add.sprite(game.world.centerX, game.world.centerY, 'bird');
+            bird.anchor.setTo(0.5, 0.5);
+            bird.scale.setTo(0.6, 0.6);
+            bird.body.gravity.y = 400;
+            bird.body.collideworldbounds = true;
+            bird.animations.add('jump', [0, 1, 2], 10, true);
+            bird.body.bounce.setTo(0, 0);
+
+            // the forwarding ground
+            ground = game.add.tileSprite(0, game.world.height - 128, game.world.width, 128, 'ground');
+            ground.body.immovable = true;
+            ground.body.setRectangle(game.world.width, 128, 0, 0);
+            
+            //scoreboard
+            scoreboard = game.add.bitmapText(game.world.centerX, game.world.centerY/5 * 3, ''+score, {font: '85px Desyrel', fill : '#ff0000', align: 'center'});
+            scoreboard.anchor.setTo(0.5, 0.5);
+
+            // add event to spacebar
+            game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR]);
+        }
+
+        function update(){
+            game.physics.collide(bird, ground, groundHandler, null, this);
+            game.physics.collide(bird, upPipe, pipeHandler, processCallback, this);
+            game.physics.collide(bird, downPipe, pipeHandler, processCallback, this);
+            ground.tilePosition.x += 2;
+
+            if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)){
+                bird.body.velocity.y = -170;
+                bird.animations.play('jump');
+            }
+
+            //countdown
+            if ((bird.body.x > (upPipe.body.x + 20)) && !pass) {
+                countDown();
+            }
+        }
+
+        // the handler for collide with ground
+        function groundHandler(_bird, _ground){
+            upPipe.body.velocity.x = 0;
+            downPipe.body.velocity.x = 0;
+            bird.body.velocity.x = 0;
+            bird.animations.stop();
+            ground.tilePosition.x = 0;
+            
+            gameOver();
+        }
+
+        
+        function pipeHandler(_bird, _pipe){
+            upPipe.body.velocity.x = 0;
+            downPipe.body.velocity.x = 0;
+            var diff = 0;
+            if (_bird.x < _pipe.x){
+                //  bird is on the left-hand side of the pipe
+                diff = _pipe.x - _bird.x;
+                _bird.body.velocity.x = (-2 * diff);
+            }else if (_bird.x > _pipe.x){
+                //  Ball is on the right-hand side of the paddle
+                diff = _bird.x -_pipe.x;
+                _bird.body.velocity.x = (2 * diff);
+            }else{
+                //  Ball is perfectly in the middle
+                //  Add a little random X to stop it bouncing straight up!
+                _bird.body.velocity.x = 2 + Math.random() * 8;
+            }
+            _bird.animations.stop();
+        }
+
+        // get random pair for up&down pipes.
+        function getRandom(){
+            // the up in [-200, 150], the down in [game.world.height-300, game.world.height+50]
+            var rand = game.rnd.realInRange(-20, 15);
+            return { up : rand * 10, down: game.world.height + 10 * (rand -10) };
+        }
+
+        function gameOver(){            
+            over = game.add.sprite(game.world.centerX, game.world.centerY/5 , 'gameover');
+            over.anchor.setTo(0.5, 0.5);
+            over.scale.setTo(0.6, 0.6);
+
+            again = game.add.sprite(game.world.centerX, game.world.centerY/5 * 2, 'again');
+            again.anchor.setTo(0.5, 0.5);
+            again.inputEnabled = true;
+            again.events.onInputDown.add(startAgain, this);
+
+            bird.kill();
+        }
+
+        function startAgain(){
+            //reset scoreboard
+            score = -1;
+            countDown();
+
+            over.kill();
+            over.destroy();
+
+            again.kill();
+            again.destroy();
+
+            upPipe.kill();
+            downPipe.kill();
+
+            bird.reset(game.world.centerX, game.world.centerY);
+            generatePipes();
+            ground.bringToTop();
+        }
+        
+        function countDown(){
+            score ++ ;
+            scoreboard.setText('' + score);
+            //set the flag to true
+            pass = true;
+        }
+
+        function processCallback(obj1, obj2){
+            return true;
+        }
+
+        function generatePipes(){
+            var initPosition = getRandom(),
+                defaultX = game.world.width + 30;
+            
+            upPipe = game.add.sprite(defaultX, initPosition['up'], 'pipe');
+            upPipe.name ="upPipe";
+            upPipe.anchor.setTo(0.5, 0.5);
+            upPipe.angle = 180;
+            upPipe.scale.setTo(0.7, 0.7);
+            upPipe.body.immovable = true;
+            upPipe.body.velocity.x= -120;
+
+            downPipe = game.add.sprite(defaultX, initPosition['down'], 'pipe');
+            downPipe.name = "downPipe";
+            downPipe.anchor.setTo(0.5, 0.5);
+            downPipe.scale.setTo(0.7, 0.7);
+            downPipe.body.immovable = true;
+            downPipe.body.velocity.x = -120;
+
+            downPipe.events.onOutOfBounds.add(function(){
+                var nextPosition = getRandom();
+                
+                upPipe.reset(defaultX, nextPosition['up']);
+                upPipe.body.velocity.x = -100;
+
+                downPipe.reset(defaultX, nextPosition['down']);
+                downPipe.body.velocity.x = -100;
+
+                //reset the pass flag
+                pass = false;
+            }, this);
+        }
+
+    </script>
+</body>
+</html>
