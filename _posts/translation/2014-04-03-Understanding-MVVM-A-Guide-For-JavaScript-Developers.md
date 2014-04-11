@@ -6,7 +6,6 @@ tags : [翻译, MVVM, MVC, MVP, KnockoutJS, Backbone]
 ---
 {% include JB/setup %}
 
-# 理解MVVM - JavaScript开发者指南
 [原文地址](http://addyosmani.com/blog/understanding-mvvm-a-guide-for-javascript-developers/)
 
 ![Model View ViewModel](http://addyosmani.com/blog/wp-content/uploads/2012/04/modelview.jpg)
