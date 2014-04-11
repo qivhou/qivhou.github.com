@@ -81,7 +81,7 @@ var aViewModel = {
 
 我们回到Todo应用看一个更高阶的例子。一段包含了所有必需数据绑定的KnockoutJS的视图代码如下所示：
 
-```javascript
+```html
 <div id="todoapp">
     <header>
         <h1>Todos</h1>
