@@ -320,7 +320,7 @@ if(!Array.isArray) {
       filepath = path.join(options.cwd || '', filepath);
 ```
 
-这是一个神奇的`options`, 在使用`file.expand`方法时，我们可以在`options`参数中指定`filter`函数，通过指定的`filter`函数来达到过滤的目的。当然如果指定的`filter`值不是一个函数时，直接通过[fs][]模块的`statSync`方法获得指定路径的`fs.Stats`对象，通过`options.filter`中传入的有效的[fs.Stats](http://nodejs.org/docs/latest/api/fs.html#fs_class_fs_stats)方法名来返回`true`或者`false`来完成过滤，如果`options.filter`既不是一个函数也不是一个有效的[fs.Stats](http://nodejs.org/docs/latest/api/fs.html#fs_class_fs_stats)方法名，那么只能抛出异常被catch捕获进而返回`false`。等整个`matches`数组中的项目都经过过滤后，将`Array.prototype.filter`方法返回的新生成的数组作为结果返回。
+这是一个神奇的`options`, 在使用`file.expand`方法时，我们可以在`options`参数中指定`filter`函数，通过指定的`filter`函数来达到过滤的目的。当然如果指定的`filter`值不是一个函数时，直接通过[fs][]模块的`statSync`方法获得指定路径的`fs.Stats`对象，通过`options.filter`中传入的有效的[fs.Stats](http://nodejs.org/docs/latest/api/fs.html#fs_class_fs_stats)方法名来返回`true`或者`false`来完成过滤，如果无法获得有效的`fs.Stats`对象或者`options.filter`既不是一个函数也不是一个有效的[fs.Stats](http://nodejs.org/docs/latest/api/fs.html#fs_class_fs_stats)方法名的话，那么只能抛出异常被catch捕获进而返回`false`。等整个`matches`数组中的项目都经过过滤后，将`Array.prototype.filter`方法返回的新生成的数组作为结果返回。
 
 ```javascript
       try {
