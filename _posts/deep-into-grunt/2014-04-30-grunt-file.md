@@ -23,7 +23,7 @@ var grunt = require('../grunt');
 
 * 通过npm install的非原生模块：glob，js-yaml等
 
-更多深入内容可参考一篇专门介绍Node.js的模块机制的[大神旧文](深入浅出Node.js（三）：深入Node.js的模块机制)。
+更多深入内容可参考一篇专门介绍Node.js的模块机制的[大神旧文](http://www.infoq.com/cn/articles/nodejs-module-mechanism)。
 
 ## node.js内部调用模块
 
@@ -164,6 +164,7 @@ var processPatterns = function(patterns, fn) {
   });
 ```
 做完循环后，将result数组作为结果返回。
+
 ```javascript
   return result;
 };
@@ -221,7 +222,14 @@ file.match = function(options, patterns, filepaths) {
 
 通过调用并判断`file.match`方法的返回结果来判断文件路径是否匹配一个或者多个通配符表达式，需要注意的是只要匹配通配符表达式中的任意一个，结果即为`true`。
 
-
+```javascript
+/ Match a filepath or filepaths against one or more wildcard patterns. Returns
+// true if any of the patterns match.
+file.isMatch = function() {
+  return file.match.apply(file, arguments).length > 0;
+};
+```
+这里唯一需要注意的是，参数格式需要与`file.match`保持一致，如果想要使用各种高大上的`options`选项的话，请仔细阅读[minimatch][]中各种说明。
 
 
 [glob]: https://github.com/isaacs/node-glob "node-glob"
