@@ -1,6 +1,6 @@
 ---
 layout : post
-category : 源码分析
+category : deep-into-grunt
 title : grunt-file 源码分析
 tags : [Grunt, 源码分析]
 ---
@@ -223,7 +223,7 @@ file.match = function(options, patterns, filepaths) {
 通过调用并判断`file.match`方法的返回结果来判断文件路径是否匹配一个或者多个通配符表达式，需要注意的是只要匹配通配符表达式中的任意一个，结果即为`true`。
 
 ```javascript
-/ Match a filepath or filepaths against one or more wildcard patterns. Returns
+// Match a filepath or filepaths against one or more wildcard patterns. Returns
 // true if any of the patterns match.
 file.isMatch = function() {
   return file.match.apply(file, arguments).length > 0;
@@ -231,6 +231,114 @@ file.isMatch = function() {
 ```
 这里唯一需要注意的是，参数格式需要与`file.match`保持一致，如果想要使用各种高大上的`options`选项的话，请仔细阅读[minimatch][]中各种说明。
 
+### file.expand
+
+这个方法通过调用`processPatterns`函数，以数组形式返回所有匹配指定的通配符表达式的文件路径。
+
+接下来分析这个方法的源码，这里用到了`grunt.util`中的`toArray`方法，其实这个`toArray`方法只是封装了[underscore][]的`toArray`将参数对象`arguments`转换为一个数组对象。
+
+```javascript
+// Return an array of all file paths that match the given wildcard patterns.
+file.expand = function() {
+  var args = grunt.util.toArray(arguments);
+```
+因为这里只是用来处理`arguments`，如果不借助任何类库的话，这段代码可以写成下面这样：
+
+```javascript
+// Return an array of all file paths that match the given wildcard patterns.
+file.expand = function() {
+  var args = Array.prototype.slice.call(arguments);
+```
+
+接下来使用`grunt.util.kindOf`方法对第一个传入参数`args[0]`进行了判断，第一个参数是`object`类型的话，通过`Array.prototype.shift`方法将第一个参数赋值给`options`变量，并从`args`数组中去除了第一个参数值，否则的话，我们给`options`变量赋值一个空的对象`{}`。
+
+```javascript
+  // If the first argument is an options object, save those options to pass
+  // into the file.glob.sync method.
+  var options = grunt.util.kindOf(args[0]) === 'object' ? args.shift() : {};
+```
+
+如果在之前不对`arguments`进行数组化处理的话，其实也是可以的，我们可以像下面这样实现它：
+
+```javascript
+  // If the first argument is an options object, save those options to pass
+  // into the file.glob.sync method.
+  var options = grunt.util.kindOf(arguments[0]) === 'object' ? Array.prototype.slice.call(arguments, 0, 1) : {};
+```
+
+需要注意的是我们将`arguments`中除第一个元素以外剩下的其他元素都赋值给了`options`，但是`arguments`对象本身没有发生变化。如果我们想要获取除第一个元素外其他元素的话，我们可以使用`Array.prototype.slice.call(arguments, 1)`，但是这样的话我们至少需要多一行代码去赋值或者处理，比直接使用`Array.prototype.shift`略为麻烦。
+
+实际上，将[arguments][]这个Array-like的对象转换为数组的情况可以经常看到，这样做的最大好处就是可以利用丰富的`Array`对象实例的方法来处理参数列表，对于[arguments][]的更多信息可以点击链接进行查看。
+
+回到源码，如果`file.expand`只接受了一个参数的话，`args`还是那个`args`，我们可以将它看做是数组化了的`arguments`，代码逻辑也很简单。但是如果`file.expand`接受了两个或者更多参数的话，世界都变了。如果`arguments[1]`是一个数组的话，就把`arguments[1]`赋值给`patterns`变量，否则的话将除`arguments[0]`以外的元素数组赋值给`patterns`比昂梁。这里之所以没有像源码中那样使用`args`变量来说事，是因为经过上一行的`args.shift()`处理之后，`args`中只剩下了第一个参数以外的其他元素。
+
+```javascript
+  // Use the first argument if it's an Array, otherwise convert the arguments
+  // object to an array and use that.
+  var patterns = Array.isArray(args[0]) ? args[0] : args;
+```
+这里还有一点需要注意的就是`Array.isArray`，一般情况下如果`Array.isArray`不是原生支持的话，我们可以通过如下方法添加这个方法，当然这个在Grunt中是不存在问题的。
+
+```javascript
+if(!Array.isArray) {
+  Array.isArray = function(arg) {
+    return Object.prototype.toString.call(arg) === '[object Array]';
+  };
+}
+```
+接下来又是无穷无尽的域值判断，如果`patterns`数组长度为0的话直接返回空数组。
+
+```javascript
+  // Return empty set if there are no patterns or filepaths.
+  if (patterns.length === 0) { return []; }
+```
+
+`processPatterns`这个老朋友又来了，不过与`file.match`中不同只是那个匿名函数，这次用到了`glob`模块的`glob.sync(pattern, [options])`方法来获得匹配的数组。话说`glob`模块中的同步匹配和异步匹配其实只差一个回调函数参数。当然要想玩转`glob`
+模块的话，也有相当多的`options`选项需要熟悉，在使用`file.expand`之前切记看看[glob][]中的`Options`说明。
+
+```javascript
+  // Return all matching filepaths.
+  var matches = processPatterns(patterns, function(pattern) {
+    // Find all matching files for this pattern.
+    return file.glob.sync(pattern, options);
+  });
+
+```
+
+如果`options`中的`filter`选项为`true`的话，通过自定义的filter方法对从`processPatterns`返回的结果集进行过滤，否则的话直接将`processPatterns`结果集进行返回。
+
+```javascript
+  // Filter result set?
+  if (options.filter) {
+    matches = matches.filter(function(filepath) {
+
+```
+
+这里用到了`options.cwd`，顾名思义这个用来指定当前工作目录，并且通过`path.join`来组合文件路径。如果`options`中没有`cwd`的key值或者`cwd`的值为undifned的话，直接使用`filepath`。
+
+```javascript
+      filepath = path.join(options.cwd || '', filepath);
+```
+
+这是一个神奇的`options`, 在使用`file.expand`方法时，我们可以在`options`参数中指定`filter`函数，通过指定的`filter`函数来达到过滤的目的。当然如果指定的`filter`值不是一个函数时，直接通过[fs][]模块的`statSync`方法获得指定路径的`fs.Stats`对象，通过`options.filter`中传入的有效的[fs.Stats](http://nodejs.org/docs/latest/api/fs.html#fs_class_fs_stats)方法名来返回`true`或者`false`来完成过滤，如果`options.filter`既不是一个函数也不是一个有效的[fs.Stats](http://nodejs.org/docs/latest/api/fs.html#fs_class_fs_stats)方法名，那么只能抛出异常被catch捕获进而返回`false`。等整个`matches`数组中的项目都经过过滤后，将`Array.prototype.filter`方法返回的新生成的数组作为结果返回。
+
+```javascript
+      try {
+        if (typeof options.filter === 'function') {
+          return options.filter(filepath);
+        } else {
+          // If the file is of the right type and exists, this should work.
+          return fs.statSync(filepath)[options.filter]();
+        }
+      } catch(e) {
+        // Otherwise, it's probably not the right type.
+        return false;
+      }
+    });
+  }
+  return matches;
+};
+```
 
 [glob]: https://github.com/isaacs/node-glob "node-glob"
 [minimatch]: https://github.com/isaacs/minimatch "minimatch"
@@ -246,10 +354,12 @@ file.isMatch = function() {
 [fs]: http://nodejs.org/api/fs.html "file system"
 [posix]: http://zh.wikipedia.org/wiki/posix "可移植操作系统接口"
 [process]: http://nodejs.org/api/process.html "process"
-
-
+[underscore]: http://underscorejs.org "underscore"
+[arguments]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/arguments "arguments"
 
 ##参考资料
+
+* [深入浅出Node.js (三)： 深入Node.js的模块机制](http://www.infoq.com/cn/articles/nodejs-module-mechanism)
 
 * [node.js入门 - 12.api：进程（process）](http://www.cnblogs.com/softlover/archive/2012/10/03/2707139.html)
 
