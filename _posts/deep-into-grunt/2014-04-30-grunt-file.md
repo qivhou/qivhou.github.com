@@ -186,12 +186,14 @@ file.match = function(options, patterns, filepaths) {
   }
 ```
 如果`patterns`和`filepaths`都为`null`的话，直接返回空数组。
+
 ```javascript
   // Return empty set if either patterns or filepaths was omitted.
   if (patterns == null || filepaths == null) { return []; }
 ```
 
 当`patterns`或者`filepaths`不是数组时，将它们各自包装为一个长度为1的数组。
+
 ```javascript
   // Normalize patterns and filepaths to arrays.
   if (!Array.isArray(patterns)) { patterns = [patterns]; }
@@ -199,11 +201,13 @@ file.match = function(options, patterns, filepaths) {
 ```
 
 当`patterns`或者`filepaths`为空数组时，返回一个空数组。
+
 ```javascript
   // Return empty set if there are no patterns or filepaths.
   if (patterns.length === 0 || filepaths.length === 0) { return []; }
 ```
 如果不符合上述种种的条件检测，接下来就会调用`processPatterns`函数，并将结果返回。
+
 ```javascript
   // Return all matching filepaths.
   return processPatterns(patterns, function(pattern) {
