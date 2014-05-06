@@ -371,6 +371,7 @@ var pathSeparatorRe = /[\/\\]/g;
 ```
 
 `extDotRe`字变量中的`first`和`last`正则分别匹配第一个`.`号后的内容和最后一个`.`号后的内容。
+
 ```javascript
 // The "ext" option refers to either everything after the first dot (default)
 // or everything after the last dot.
