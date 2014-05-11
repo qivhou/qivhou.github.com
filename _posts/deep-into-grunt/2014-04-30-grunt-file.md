@@ -1,7 +1,7 @@
 ---
 layout : post
 category : deep-into-grunt
-title : Grunt源码分析之'/grunt/file.js'
+title : Grunt源码解析之'/grunt/file.js'
 tags : [Grunt, 源码分析, grunt.file]
 ---
 {% include JB/setup %}
